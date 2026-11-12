@@ -66,7 +66,20 @@ export const BURNABLES = {
   },
 };
 
-export const BURNABLE = BURNABLES.match;
+// The cigarette: one PNG, burned procedurally from the ash end down to the filter.
+BURNABLES.cigarette = {
+  type: 'single',
+  src: 'assets/cigarette/cigarette.png',
+  axis: 'y',
+  maxSize: 560,
+  noiseScale: 0.05,
+  noiseAmount: 0.03,
+  edgeWidth: 0.02,
+  charWidth: 0.1,
+  flameScale: 0.4,   // an ember, not a flame
+};
+
+export const BURNABLE = BURNABLES.cigarette;
 
 export const CONFIG = {
   duration: DURATION_SECONDS,
@@ -81,7 +94,7 @@ export const CONFIG = {
 
   burnable: BURNABLE,
 
-  storageKey: 'match.ignition.v1',
+  storageKey: 'cigarette.ignition.v1',
 
   // How long the simulated strike takes in ?demo=1 before the match catches.
   demoIgniteDelayMs: 2400,
@@ -199,16 +212,15 @@ export const COPY = {
   placeholder: 'Ask anything',
   placeholderLocked: 'Locked while it burns',
   send: 'Send',
-  gateTitle: 'This computation requires a flame.',
-  gateTerms: (duration) =>
-    `The match burns for ${duration}. Once lit, it cannot be paused, cancelled, or skipped.`,
+  gateTitle: 'This computation requires you to smoke a cigarette.',
+  gateTerms: null,
   gatePrivacy:
-    'Allow the camera so it can see the match catch. Video is processed on this device. Nothing leaves the browser.',
+    'Allow the camera permission so it can see the ember glow. Video is processed on this device. Nothing leaves the browser.',
   gateSafety:
-    'Light the match over a non-flammable surface, away from the keyboard and screen, with water nearby.',
+    'Step outside and light one up in a safe environment in order to view your computation results.',
   gateButton: 'Allow camera',
   cameraStarting: 'Starting the camera.',
-  ignitionCaption: 'Light a match.',
+  ignitionCaption: 'Light a cigarette.',
   cameraDenied:
     'Camera access was denied. Allow the camera for this page in the browser settings, then try again.',
   cameraMissing: 'No camera was found on this device.',

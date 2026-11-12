@@ -197,7 +197,7 @@ function enterGate() {
     line(msg, COPY.gateTitle);
     const detail = document.createElement('div');
     detail.className = 'msg__detail';
-    line(detail, COPY.gateTerms(describeDuration(DURATION / SPEED)));
+    if (COPY.gateTerms) line(detail, COPY.gateTerms(describeDuration(DURATION / SPEED)));
     line(detail, COPY.gatePrivacy);
     line(detail, COPY.gateSafety, 'msg__safety');
     const status = line(detail, '', 'msg__status');
