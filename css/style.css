@@ -1,0 +1,324 @@
+/*
+ * One typeface. Two sizes. One colour, taken from the match.
+ * Warm near-black, so that the flame is the only light source on the page.
+ */
+
+@font-face {
+  font-family: 'DM Mono';
+  src: url('../assets/fonts/dm-mono-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #0f0d0b;
+  --ink: #e9e2d6;
+  --ink-dim: #9a9184;                    /* 6.2:1 on --bg */
+  --line: rgba(233, 226, 214, 0.2);
+  --line-strong: rgba(233, 226, 214, 0.55);
+  --amber: #f2cf50;                      /* sampled from the reference flame */
+
+  --font: 'DM Mono', ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+  --size: 16px;                          /* size one: everything */
+  --size-large: clamp(44px, 9vw, 76px);  /* size two: the percentage */
+
+  --unit: 8px;
+  --measure: 720px;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { height: 100%; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 var(--size) / 1.6 var(--font);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+p, h2 { margin: 0; font-size: inherit; font-weight: inherit; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+[hidden] { display: none !important; }
+
+/* The light the flame throws. The single gradient on the page belongs to it. */
+.pageglow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at var(--fx, 50%) var(--fy, 50%),
+    rgba(242, 207, 80, 0.9) 0,
+    rgba(242, 207, 80, 0.36) 11vmax,
+    rgba(242, 207, 80, 0.12) 28vmax,
+    rgba(242, 207, 80, 0) 54vmax
+  );
+}
+
+/* ---------------------------------------------------------------- layout */
+
+.app {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: calc(var(--unit) * 3);
+  width: 100%;
+  max-width: var(--measure);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding:
+    max(calc(var(--unit) * 4), env(safe-area-inset-top))
+    max(calc(var(--unit) * 3), env(safe-area-inset-right))
+    max(calc(var(--unit) * 3), env(safe-area-inset-bottom))
+    max(calc(var(--unit) * 3), env(safe-area-inset-left));
+}
+
+/* ---------------------------------------------------------------- thread */
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--unit) * 3);
+  max-height: 46vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* room for focus rings inside the scroll container */
+  padding: 6px;
+  margin: -6px;
+}
+
+.msg { max-width: 58ch; overflow-wrap: anywhere; }
+.msg--user { align-self: flex-end; text-align: right; color: var(--ink-dim); }
+.msg--system { align-self: flex-start; }
+
+.msg__detail {
+  display: grid;
+  gap: var(--unit);
+  margin-top: var(--unit);
+  color: var(--ink-dim);
+}
+.msg__status { color: var(--ink); }
+.msg__actions { margin-top: calc(var(--unit) * 2); }
+.msg__actions:empty { display: none; }
+
+/* ---------------------------------------------------------------- controls */
+
+.btn,
+.composer__send {
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: calc(var(--unit) * 1.25) calc(var(--unit) * 2.25);
+  min-height: 44px;
+  cursor: pointer;
+}
+.btn:hover,
+.composer__send:hover:not(:disabled) { border-color: var(--line-strong); }
+
+:focus-visible {
+  outline: 1px solid var(--amber);
+  outline-offset: 3px;
+}
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--unit) * 2);
+  padding-top: calc(var(--unit) * 2);
+  border-top: 1px solid var(--line);
+}
+.composer__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  font: inherit;
+  color: var(--ink);
+  caret-color: var(--amber);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+.composer__input::placeholder { color: var(--ink-dim); opacity: 1; }
+.composer__input:focus-visible { outline: none; }
+.composer:focus-within { border-top-color: var(--amber); }
+.composer__input:disabled { cursor: not-allowed; }
+.composer__send:disabled { color: var(--ink-dim); cursor: not-allowed; }
+
+/* ---------------------------------------------------------------- stage */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.camera {
+  display: grid;
+  justify-items: center;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.9s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s linear;
+}
+.camera.is-open { max-height: 420px; opacity: 1; }
+
+.camera__frame {
+  position: relative;
+  width: 208px;
+  aspect-ratio: 4 / 3;
+  margin: 1px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.camera__frame video,
+.camera__debug {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);           /* mirrored, like a mirror */
+}
+.camera__frame video { opacity: 0.72; }   /* quiet */
+.camera__debug { object-fit: fill; image-rendering: pixelated; }
+
+/* Framing guide. Same rectangle the detector searches (detection.glow.roi). */
+.camera__guide {
+  position: absolute;
+  left: 20%;
+  top: 12%;
+  width: 60%;
+  height: 76%;
+  border: 1px solid var(--line-strong);
+}
+
+.caption {
+  min-height: calc(var(--size) * 1.6);
+  margin-top: calc(var(--unit) * 2);
+  text-align: center;
+}
+
+.burn {
+  position: relative;
+  width: 100%;
+  /* takes what the thread leaves; the match scales to fit */
+  flex: 1 1 0;
+  min-height: 170px;
+  max-height: 340px;
+}
+.app[data-orientation='vertical'] .burn { min-height: 300px; max-height: 560px; }
+
+/* While the terms are on screen they are read in full; the match waits, smaller. */
+.app[data-state='gate'] .thread,
+.app[data-state='camera-error'] .thread,
+.app[data-state='ignition'] .thread { max-height: none; overflow: visible; }
+.app[data-state='gate'] .burn,
+.app[data-state='camera-error'] .burn,
+.app[data-state='ignition'] .burn { min-height: 120px; }
+.burn canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: calc(var(--unit) * 3);
+  margin-top: var(--unit);
+}
+.readout__percent {
+  font-size: var(--size-large);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  min-width: 4ch;
+  text-align: right;
+}
+.readout__clock { color: var(--ink-dim); min-width: 5ch; }
+
+/* ---------------------------------------------------------------- output */
+
+.output {
+  width: min(560px, calc(100vw - 48px));
+  padding: calc(var(--unit) * 4);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font: inherit;
+}
+.output::backdrop { background: rgba(8, 7, 6, 0.82); }
+.output__text { white-space: pre-wrap; margin-bottom: calc(var(--unit) * 4); }
+
+/* ---------------------------------------------------------------- debug (key D) */
+
+.debug {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 5;
+  margin: 0;
+  padding: 10px 12px;
+  max-width: calc(100vw - 24px);
+  overflow-x: auto;
+  font: 400 12px / 1.5 var(--font);
+  color: var(--ink);
+  background: rgba(15, 13, 11, 0.92);
+  border: 1px solid var(--line);
+  pointer-events: none;
+}
+.app[data-debug] .camera__frame { width: min(440px, 88vw); }
+.app[data-debug] .camera__frame video { opacity: 1; }
+
+.noscript { padding: 24px; }
+
+/* ---------------------------------------------------------------- small screens */
+
+@media (max-width: 520px) {
+  .app { gap: calc(var(--unit) * 2); }
+  .thread { max-height: 40vh; }
+  .camera__frame { width: 168px; }
+}
+
+@media (max-height: 620px) {
+  .burn { min-height: 150px; }
+  .camera__frame { width: 148px; }
+}
+
+/* ---------------------------------------------------------------- motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .camera { transition: none; }
+  * { scroll-behavior: auto !important; }
+}
